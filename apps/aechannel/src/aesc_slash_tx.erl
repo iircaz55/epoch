@@ -49,6 +49,8 @@ new(#{channel_id := ChannelId,
       payload    := Payload,
       ttl        := TTL,
       fee        := Fee,
+      state_hash := StateHash,
+      round      := Round,
       nonce      := Nonce}) ->
     Tx = #channel_slash_tx{
             channel_id = ChannelId,
@@ -56,6 +58,8 @@ new(#{channel_id := ChannelId,
             payload    = Payload,
             ttl        = TTL,
             fee        = Fee,
+            state_hash = StateHash,
+            round      = Round,
             nonce      = Nonce},
     {ok, aetx:new(?MODULE, Tx)}.
 
@@ -84,7 +88,10 @@ check(#channel_slash_tx{channel_id = ChannelId,
                         from       = FromPubKey,
                         payload    = Payload,
                         fee        = Fee,
-                        nonce      = Nonce}, _Context, Trees, Height, _ConsensusVersion) ->
+                        state_hash = _StateHash,
+                        round      = _Round,
+                        nonce      = Nonce}, _Context, Trees, Height,
+                                                _ConsensusVersion) ->
     Checks =
         [fun() -> aetx_utils:check_account(FromPubKey, Trees, Nonce, Fee) end,
          fun() -> check_payload(ChannelId, FromPubKey, Payload, Height, Trees) end],
@@ -101,7 +108,10 @@ process(#channel_slash_tx{channel_id = ChannelId,
                           from       = FromPubKey,
                           payload    = Payload,
                           fee        = Fee,
-                          nonce      = Nonce}, _Context, Trees, Height, _ConsensusVersion) ->
+                          state_hash = _StateHash,
+                          round      = _Round,
+                          nonce      = Nonce}, _Context, Trees, Height,
+                                                  _ConsensusVersion) ->
     AccountsTree0 = aec_trees:accounts(Trees),
     ChannelsTree0 = aec_trees:channels(Trees),
 
@@ -138,6 +148,8 @@ serialize(#channel_slash_tx{channel_id = ChannelId,
                             payload    = Payload,
                             ttl        = TTL,
                             fee        = Fee,
+                            state_hash = StateHash,
+                            round      = Round,
                             nonce      = Nonce}) ->
     {version(),
      [ {channel_id, ChannelId}
@@ -145,6 +157,8 @@ serialize(#channel_slash_tx{channel_id = ChannelId,
      , {payload   , Payload}
      , {ttl       , TTL}
      , {fee       , Fee}
+     , {state_hash, StateHash}
+     , {round     , Round}
      , {nonce     , Nonce}
      ]}.
 
@@ -155,12 +169,16 @@ deserialize(?CHANNEL_SLASH_TX_VSN,
             , {payload   , Payload}
             , {ttl       , TTL}
             , {fee       , Fee}
+            , {state_hash, StateHash}
+            , {round     , Round}
             , {nonce     , Nonce}]) ->
     #channel_slash_tx{channel_id = ChannelId,
                       from       = FromPubKey,
                       payload    = Payload,
                       ttl        = TTL,
                       fee        = Fee,
+                      state_hash = StateHash,
+                      round      = Round,
                       nonce      = Nonce}.
 
 -spec for_client(tx()) -> map().
@@ -169,14 +187,18 @@ for_client(#channel_slash_tx{channel_id = ChannelId,
                              payload    = Payload,
                              ttl        = TTL,
                              fee        = Fee,
+                             state_hash = StateHash,
+                             round      = Round,
                              nonce      = Nonce}) ->
-    %% TODO: add swagger schema name
-    #{<<"vsn">>        => version(),
+    #{<<"data_schema">>=> <<"ChannelSlashTxJSON">>, % swagger schema name
+      <<"vsn">>        => version(),
       <<"channel_id">> => aec_base58c:encode(channel, ChannelId),
       <<"from">>    => aec_base58c:encode(account_pubkey, FromPubKey),
       <<"payload">>    => Payload,
       <<"ttl">>        => TTL,
       <<"fee">>        => Fee,
+      <<"state_hash">> => aec_base58c:encode(state, StateHash),
+      <<"round">>      => Round,
       <<"nonce">>      => Nonce}.
 
 serialization_template(?CHANNEL_SLASH_TX_VSN) ->
@@ -185,6 +207,8 @@ serialization_template(?CHANNEL_SLASH_TX_VSN) ->
     , {payload   , binary}
     , {ttl       , int}
     , {fee       , int}
+    , {state_hash, binary}
+    , {round     , int}
     , {nonce     , int}
     ].
 
