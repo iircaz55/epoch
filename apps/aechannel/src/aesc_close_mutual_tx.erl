@@ -95,7 +95,7 @@ check(#channel_close_mutual_tx{channel_id       = ChannelId,
                                responder_amount = ResponderAmount,
                                fee              = Fee,
                                state_hash       = _StateHash,
-                               round            = _Round,
+                               round            = Round,
                                nonce            = Nonce}, _Context, Trees, _Height,
                                                 _ConsensusVersion) ->
     case aesc_state_tree:lookup(ChannelId, aec_trees:channels(Trees)) of
@@ -120,6 +120,9 @@ check(#channel_close_mutual_tx{channel_id       = ChannelId,
                     ChannelAmt = aesc_channels:total_amount(Channel),
                     ok_or_error(ChannelAmt =:= InitiatorAmount + ResponderAmount + Fee,
                                 wrong_amounts)
+                end,
+                fun() -> % check round
+                    aesc_utils:check_round_at_last_last(Channel, Round)
                 end
                 ],
             case aeu_validation:run(Checks) of
