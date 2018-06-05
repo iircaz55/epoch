@@ -129,7 +129,7 @@ apply_signed_txs_strict(Miner, SignedTxs, PrevBlockSignedTxs, Trees, Height, Con
                        trees(), height(), non_neg_integer()) ->
                           {ok, list(aetx_sign:signed_tx()), trees()}.
 apply_signed_txs(Miner, SignedTxs, PrevBlockSignedTxs, Trees, Height, ConsensusVersion) ->
-    {ok, _, _} = apply_signed_txs_common(Miner, PrevBlockSignedTxs, SignedTxs, Trees, Height, ConsensusVersion, false).
+    {ok, _, _} = apply_signed_txs_common(Miner, SignedTxs, PrevBlockSignedTxs, Trees, Height, ConsensusVersion, false).
 
 %%%=============================================================================
 %%% Internal functions
